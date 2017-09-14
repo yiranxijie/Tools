@@ -104,7 +104,6 @@ public class UploadImgAction extends ActionSupport {
 
     //Java执行shell脚本
     public String executeShell(String shellCommand) throws IOException {
-//        System.out.println("shellCommand:" + shellCommand);
         int success = 0;
         StringBuffer stringBuffer = new StringBuffer();
         BufferedReader bufferedReader = null;
