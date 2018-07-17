@@ -5,6 +5,7 @@ import com.opensymphony.xwork2.ActionSupport;
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,12 +15,11 @@ public class UploadImgAction extends ActionSupport {
     private String imgfileContentType;//多个文的内容类型,如果 单个文件就定义成 String imageContentType
     private String message = "0";
 
-    private String shellcmd = "/home/scu/Documents/fapiao/imgOCR.sh";
+    private String shellcmd = "";
+    private String imgpath = "";
 
     // 记录Shell执行状况的日志文件的位置(绝对路径)
-    private String executeShellLogFile = "/home/scu/Documents/fapiao/executeShell.log";
-
-    private String imgpath = "/var/www/html/uploadImage/";
+//    private String executeShellLogFile = "/home/scu/Documents/fapiao/executeShell.log";
 
     public String getMessage() {
         return message;
@@ -54,20 +54,25 @@ public class UploadImgAction extends ActionSupport {
     }
 
     @Override
-    public String execute() throws Exception {
-        String PATH = "/var/www/html/uploadImage/";
+    public String execute() {
+        Properties prop = null;
 //        System.out.println(imgfile);
 //        System.out.println(imgfileFileName);
 //        System.out.println(imgfileContentType);
 
         try {
+            // read some path config
+            prop = readOCRConfig();
+            shellcmd = prop.getProperty("shellcmd");
+            imgpath = prop.getProperty("imgpath");
+
             if (imgfile != null && (imgfileContentType.endsWith("png") || imgfileContentType.endsWith("jpeg"))) {
 
                 //得到输入流，通过struts已经得到名为upload的控件的值
                 InputStream is = new FileInputStream(imgfile);
 
                 //得到输出流
-                OutputStream os = new FileOutputStream(PATH + "test." + imgfileFileName.substring(imgfileFileName.length() - 3));
+                OutputStream os = new FileOutputStream(imgpath + "test." + imgfileFileName.substring(imgfileFileName.length() - 3));
 
                 //分配接受缓冲区
                 byte buffer[] = new byte[1024];
@@ -79,7 +84,7 @@ public class UploadImgAction extends ActionSupport {
                 is.close();
                 os.flush();
 
-                String content = executeShell(shellcmd);
+                String content = executeShell();
                 System.out.println(content);
                 Pattern p = Pattern.compile("\\{");
                 Matcher m = p.matcher(content);
@@ -94,16 +99,22 @@ public class UploadImgAction extends ActionSupport {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            message = "0";
+            message = e.getMessage();
+            return ERROR;
         }
         message = "0";
-        System.out.println(message);
         return ERROR;
+    }
 
+    public Properties readOCRConfig() throws Exception {
+        Properties prop = new Properties();
+        InputStream in = new BufferedInputStream(new FileInputStream(System.getProperty("user.dir") + "/ocrConfig.txt"));
+        prop.load(in);
+        return prop;
     }
 
     //Java执行shell脚本
-    public String executeShell(String shellCommand) throws IOException {
+    public String executeShell() throws IOException {
         int success = 0;
         StringBuffer stringBuffer = new StringBuffer();
         BufferedReader bufferedReader = null;
@@ -111,7 +122,7 @@ public class UploadImgAction extends ActionSupport {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS ");
 
         Process process = null;
-        String[] cmd = {"/bin/sh", "-c", shellCommand + " " + imgpath + "test." + imgfileFileName.substring(imgfileFileName.length() - 3)};
+        String[] cmd = {"/bin/sh", "-c", shellcmd + " " + imgpath + "test." + imgfileFileName.substring(imgfileFileName.length() - 3)};
 
         try {
             process = Runtime.getRuntime().exec(cmd);

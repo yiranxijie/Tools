@@ -148,9 +148,24 @@
                 {
 //                  var d = eval("("+data+")");//将数据转换成json类型，可以把data用alert()输出出来看看到底是什么样的结构
                     var jsondata = JSON.parse(data);   //把json字符串转化为json对象，才能用j.name取值
+                    var fplx = getfplx(jsondata.code);
+                    if (fplx == "火车票") {
+//                        alert("火车票: \n"+data);
+                        $("#log_window").css('display', 'block');
+                        //查验时间
+                        $('#cysj').text("查验时间：" + jsondata.Goods[0].time);
+                        $('#fpcc_zp').text(fplx);
+                        $('#tabPage-zzszyfp').append('<div style="width: 100%; word-break: break-all";>' + data + '</div>');
+                        $('#tabPage-zzszyfp table').css('display', 'none')
+                        $('.main').css('display', 'none');
+                        $('body').css('background-color', '#666');
+                        return 0;
+                    }
+                    var ip = getip(jsondata.code);
                     $("#log_window").css('display','block');
                     //查验时间
                     $('#cysj').text("查验时间："+jsondata.Goods[0].time);
+                    $('#fpcc_zp').text(ip + fplx);
                     //发票号码
                     $('#fpdm_zp').text(jsondata.code);
                     $('#fphm_zp').text(jsondata.num);
@@ -203,6 +218,7 @@
                 },
                 error: function (data, status, e)//服务器响应失败处理函数
                 {
+//                    alert("data: "+data+";\n"+"status: "+status+";\n"+"exp: "+e);
                     alert("识别失败！请尝试重新上传。。。");
                     window.location.reload();
                 }
@@ -214,6 +230,89 @@
         var l = document.getElementById("log_window");
         l.style.display = "none";
         window.location.reload(true);
+    }
+
+    function getfplx(fpdm) {
+        var fplx = "99";
+        var value = "";
+        var code = new Array("144031539110", "131001570151", "133011501118", "111001571071");
+        if (typeof fpdm != "undefined" && fpdm) {
+            var a = fpdm.charAt(7);
+            if (fpdm.length == 10) {
+                if (a == '1' || a == '5') {
+                    fplx = "01";
+                    value = "增值税专用发票"
+                }
+                else if (a == '3' || a == '6') {
+                    fplx = "04";
+                    value = "增值税普通发票"
+                }
+                else if (a == '2' || a == '7') {
+                    fplx = "02";
+                    value = "货物运输业增值税专用发票"
+                } else if (a == '9') {
+                    fplx = "9999";
+                    value = "火车票"
+                }
+            }
+            else {
+                for (var i in code) {
+                    if (fpdm == code[i]) {
+                        fplx = "10";
+                        value = "增值税电子普通发票"
+                        break;
+                    }
+                }
+                if (fplx.equals("99")) {
+                    if (fpdm.charAt(0) == '0' && fpdm.substring(10, 12) == "11") {
+                        fplx = "10";
+                        value = "增值税电子普通发票"
+                    }
+                    else if (fpdm.charAt(0) == '0' && (fpdm.substring(10, 12) == "06" || fpdm.substring(10, 12) == "07")) {
+                        fplx = "11";
+                        value = "增值税普通发票（卷票）"
+                    }
+                    else if ((fpdm.charAt(0) != '0') && a == '2') {
+                        fplx = "03";
+                        value = "机动车销售统一发票"
+                    }
+                }
+            }
+        }
+        return value;
+    }
+
+    function getip(fpdm) {
+        var iparr = [["1100", "北京市"], ["1200", "天津市"],
+            ["1300", "河北省"], ["1400", "山西省"], ["1500", "内蒙古自治区"],
+            ["2100", "辽宁省"], ["2102", "大连市"], ["2200", "吉林省"],
+            ["2300", "黑龙江省"], ["3100", "上海市"], ["3200", "江苏省"],
+            ["3300", "浙江省"], ["3302", "宁波市"], ["3400", "安徽省"],
+            ["3500", "福建省"], ["3502", "厦门市"], ["3600", "江西省"],
+            ["3700", "山东省"], ["3702", "青岛市"], ["4100", "河南省"],
+            ["4200", "湖北省"], ["4300", "湖南省"], ["4400", "广东省"],
+            ["4403", "深圳市"], ["4500", "广西"], ["4600", "海南省"],
+            ["5000", "重庆市"], ["5100", "四川省"],
+            ["5200", "贵州省"], ["5300", "云南省"], ["5400", "西藏"],
+            ["6100", "陕西省"], ["6200", "甘肃省"], ["6300", "青海省"],
+            ["6400", "宁夏"], ["6500", "新疆"]];
+        var ip = null;
+        var dqdm = null;
+        if (fpdm.length == 12) {
+            dqdm = fpdm.substring(1, 5);
+        } else {
+            dqdm = fpdm.substring(0, 4);
+        }
+        if ((dqdm != "2102") && (dqdm != "3302") && (dqdm != "3502") && (dqdm != "3702") && (dqdm != "4403")) {
+            dqdm = dqdm.substring(0, 2) + "00";
+        }
+        for (var i = 0; i < 36; i++) {
+            if (dqdm == (iparr[i][0])) {
+                ip = iparr[i][1];
+                break;
+            }
+        }
+        return ip;
     }
 
 </script>

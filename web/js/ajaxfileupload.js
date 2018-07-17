@@ -109,7 +109,7 @@ jQuery.extend({
                 }
             }catch(e)
             {
-                jQuery.handleError(s, xml, null, e);
+                jQuery.handleError(s, xml.responseText, null, e);
             }
             if ( xml || isTimeout == "timeout")
             {
@@ -120,7 +120,7 @@ jQuery.extend({
                 var message = xml.responseText; //服务器返回的message内容.由于struts配置返回类型是json，所以message返回的是jsonstring类型，这里判断要小心
                 if(  message == JSON.stringify("0") ){   //服务器端返回status是error
                     status = "error"
-                    jQuery.handleError(s, xml, status);
+                    jQuery.handleError(s, xml.responseText, status);
                 }else{
                     try {
                         status = isTimeout != "timeout" ? "success" : "error";
@@ -137,11 +137,11 @@ jQuery.extend({
                             if( s.global )
                                 jQuery.event.trigger( "ajaxSuccess", [xml, s] );
                         } else
-                            jQuery.handleError(s, xml, status);
+                            jQuery.handleError(s, xml.responseText, status);
                     } catch(e)
                     {
                         status = "error";
-                        jQuery.handleError(s, xml, status, e);
+                        jQuery.handleError(s, xml.responseText, status, e);
                     }
                 }
 
@@ -167,7 +167,7 @@ jQuery.extend({
 
                     } catch(e)
                     {
-                        jQuery.handleError(s, xml, null, e);
+                        jQuery.handleError(s, xml.responseText, null, e);
                     }
 
                 }, 100)
@@ -203,7 +203,7 @@ jQuery.extend({
 
         } catch(e)
         {
-            jQuery.handleError(s, xml, null, e);
+            jQuery.handleError(s, xml.responseText, null, e);
         }
         if(window.attachEvent){
             document.getElementById(frameId).attachEvent('onload', uploadCallback);
